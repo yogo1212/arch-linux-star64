@@ -1,0 +1,12 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/dracut/*
+Target = usr/lib/firmware/*
+
+[Action]
+Description = Running create_extlinux_conf...
+When = PostTransaction
+Exec = /usr/bin/create_star64_extlinux_conf

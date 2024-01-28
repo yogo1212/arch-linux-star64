@@ -1,0 +1,111 @@
+#!/bin/sh -e
+
+dev_or_file="$1"
+shift
+
+sudo_or_not() {
+	if [ -w "$dev_or_file" ]; then
+		"$@"
+	else
+		sudo "$@"
+	fi
+}
+
+pad_align_size_mb() {
+	local mb="$(( 1024 * 1024 ))"
+	local size="$1"
+	local size_mb="$(( (size + mb - 1) / mb ))"
+	local pad_mb="$2"
+	local align_mb="$3"
+
+	echo "$(( (size_mb + pad_mb + align_mb - 1) / align_mb * align_mb ))"
+}
+
+pad_align_file_size_mb() {
+	local size="$(stat -c '%s' "$1")"
+	shift
+
+	pad_align_size_mb "$size" "$@"
+}
+
+offset_mb=2
+spl_mb="$(pad_align_file_size_mb "$UBOOT_SPL" 1 2)"
+itb_mb="$(pad_align_file_size_mb "$UBOOT_ITB" 2 2)"
+rootfs_mb=$(pad_align_file_size_mb "$ROOTFS_IMG" 0 2)
+
+img_size=$(( (offset_mb + spl_mb + itb_mb + rootfs_mb) * 1024 * 1024 ))
+
+if [ -b "$dev_or_file" ]; then
+	if [ "$(sudo_or_not blockdev --getsize64 "$dev_or_file")" -lt "$img_size" ]; then
+		echo "$dev_or_file is too small (need at least $img_size bytes)" >&2
+		exit 1
+	fi
+else
+	# TODO allow using more space
+	truncate -s "$img_size" "$dev_or_file"
+fi
+
+# just to get rid of warnings about overwriting partition tables
+sudo_or_not dd "if=/dev/zero" "of=$dev_or_file" count=4 bs=4096 conv=notrunc
+
+# OpenSBI (ROM) boots the secondary program loader from this GPT partition
+SPL_PARTITION_TYPE_UUID=5B193300-FC78-40CD-8002-E86C45580B47
+UBOOT_PARTITION_TYPE_UUID=2E54B353-1271-4842-806F-E436D6AF6985
+# TODO ^^^ in the u-boot readme, spl is read from 2E54B353..  ^^^
+# and UBOOT_ITB should lie on BC13C2FF-59E6-4262-A352-B275FD6F7172
+
+# rootfs
+LINUX_FS_PARTITION_TYPE_UUID=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+
+# TODO -w always
+
+sfdisk -X gpt "$dev_or_file" <<EOF
+name=spl,    start=2MiB, size=${spl_mb}MiB, type=$SPL_PARTITION_TYPE_UUID
+name=uboot,  size=${itb_mb}MiB,             type=$UBOOT_PARTITION_TYPE_UUID
+name=system, bootable,                      type=$LINUX_FS_PARTITION_TYPE_UUID
+EOF
+
+# boot partition-type = 0xC
+# rootfs partition-type = 0x83
+
+# TODO remove parted dependency?
+sudo_or_not parted -s "$dev_or_file" unit B print |\
+	awk '/^Number/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); gsub(/[^[:digit:]]/, "", $4); print $5 "|" $2 "|" $4}' |\
+	while read line; do
+		name="$(echo "$line" | cut -f1 -d'|')"
+		part_offset="$(echo "$line" | cut -f2 -d'|')"
+		part_size="$(echo "$line" | cut -f3 -d'|')"
+		case "$name" in
+		spl)
+			file="$UBOOT_SPL"
+			;;
+		uboot)
+			file="$UBOOT_ITB"
+			;;
+		system)
+			file="$ROOTFS_IMG"
+			;;
+		*)
+			[ -z "$name" ] || echo "ignoring unknown partition: $name" >&2
+			continue
+		esac
+
+		file_size="$(stat -c '%s' "$file")"
+		if [ ! "$file_size" -le "$part_size" ]; then
+			echo "$file doesn't fit $name ($file_size > $part_size)" >&2
+			exit 1
+		fi
+
+		# use all available space for the root filsystem
+		if [ -b "$dev_or_file" ] && [ "$name" = system ]; then
+			truncate -s "$part_size" "$ROOTFS_IMG"
+			resize2fs "$ROOTFS_IMG"
+		fi
+
+		if [ $(( part_offset % 4096 )) -ne 0 ] || [ $(( part_size % 4096 )) -ne 0 ]; then
+			echo "partition $name size ($part_size) or offset ($part_offset) not a multiple of 4096" >&2
+			exit 1
+		fi
+
+		sudo_or_not dd "if=$file" "of=$dev_or_file" seek=$(( part_offset / 4096 )) bs=4096 conv=notrunc
+	done

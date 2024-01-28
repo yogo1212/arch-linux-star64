@@ -1,0 +1,48 @@
+#!/bin/bash
+
+cd /boot
+
+dracut_options=('--compress=zstd' '-o' ' network cifs nfs ')
+
+if [ "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]; then
+	# native build
+	dracut_options+=('--hostonly')
+	rootfs_uuid="$(blkid -s UUID -o value "$(findmnt -n -o SOURCE /)")"
+else
+	# inside chroot
+	# TODO get from make
+	dracut_options+=('-N')
+	rootfs_uuid="$(cat /mnt/build/rootfs.uuid)"
+fi
+
+ls "*.initrd" >/dev/null 2>&1 && rm "*.initrd"
+
+cat >/boot/extlinux/extlinux.conf <<EOF
+menu title Select OS
+timeout 4
+EOF
+
+for kernel in /usr/lib/modules/*/vmlinuz
+do
+	kver="$(echo "$kernel" | cut -f5 -d'/')"
+	initrd="linux-$kver.initrd"
+
+	# dracut doesn't reliably exit with 0 but still generates an image
+	dracut "${dracut_options[@]}" "$initrd" "$kver"
+ 	[ -f "$initrd" ] && cat >>/boot/extlinux/extlinux.conf <<EOF
+
+label Arch Linux
+    kernel $kernel
+    fdt $DTB_PATH
+    append console=tty1 console=ttyS0,115200 rootwait earlycon=sbi root=UUID=$rootfs_uuid
+    initrd /boot/$initrd
+EOF
+
+	cat >>/boot/extlinux/extlinux.conf <<EOF
+
+label Arch Linux (no initrd)
+    kernel $kernel
+    fdt $DTB_PATH
+    append console=tty1 console=ttyS0,115200 rootwait earlycon=sbi root=UUID=$rootfs_uuid
+EOF
+done

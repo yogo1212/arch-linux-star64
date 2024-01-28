@@ -1,0 +1,23 @@
+pkgname=star64-extlinux
+pkgver=0.1
+pkgrel=1
+pkgdesc="Install/Update extlinux.conf to boot the Star64 SBC using libalpm hooks"
+arch=('riscv64')
+url="TODO"
+license=('GPL2')
+depends=('dracut')
+source=("$SF2_DTB_URL")
+sha256sums=('76d638a042a909101d8a5e247880222b2405ab2373fe44462c3e9e7f445085f1')
+
+package() {
+  mkdir -p "$pkgdir/boot/extlinux" "$pkgdir/usr/bin" "$pkgdir/usr/share/libalpm/hooks/"
+
+	# TODO not super nice
+	dtb_path=/boot/star64.dtb
+  sed -E "s|\\\$DTB_PATH|$dtb_path|" "$srcdir/../create_star64_extlinux_conf" > "$pkgdir/usr/bin/create_star64_extlinux_conf"
+  chmod +x "$pkgdir/usr/bin/create_star64_extlinux_conf"
+
+	cp jh7110-visionfive-v2.dtb "$pkgdir/$dtb_path"
+
+	cp "$srcdir/../libalpm.hook" "$pkgdir/usr/share/libalpm/hooks/90-create-star64-extlinux-conf.hook"
+}

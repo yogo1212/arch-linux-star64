@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+cat >>/etc/fstab <<EOF
+UUID=$ROOTFS_UUID /              ext4    defaults,noatime 0 1
+EOF

@@ -1,0 +1,57 @@
+#!/bin/sh -ex
+
+dest_img="$1"
+
+[ ! -d "$ROOTFS_BUILD_DIR" ] || rm -rf "$ROOTFS_BUILD_DIR"
+
+mkdir "$ROOTFS_BUILD_DIR"
+
+# being on a tmpfs inside the mount namespace is really nice but mke2fs has problems with it
+# can limit size of the file system, cleanup is free, and - of course - it's fast
+# so no: mount -t tmpfs none "$ROOTFS_BUILD_DIR"
+# however, not using a tmpfs leads other errors
+
+mount -t tmpfs -o noatime none "$ROOTFS_BUILD_DIR"
+
+tar -C "$ROOTFS_BUILD_DIR" -xf "$BASE_ROOTFS_TAR"
+
+mkdir -p "$ROOTFS_BUILD_DIR/boot"
+
+run_mounted() {
+	# exporting in a loop is a hassle
+	{
+		grep -v '^#' .env.rootfs-customization
+		echo ./customize_rootfs
+		echo "$ROOTFS_BUILD_DIR"
+	} | xargs -d '\n' env
+}
+
+# this includes /proc/sys/fs/binfmt_misc, which allows running the binaries inside
+mount --rbind /proc/ "$ROOTFS_BUILD_DIR/proc"
+# /dev/shm, /dev/random, /dev/urandom and the likes are required for GPG and such
+mount --rbind /dev "$ROOTFS_BUILD_DIR/dev"
+mount --bind . "$ROOTFS_BUILD_DIR/mnt"
+mount --bind "$PACMAN_CACHE_DIR" "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
+mount --bind /etc/resolv.conf "$ROOTFS_BUILD_DIR/etc/resolv.conf"
+
+run_mounted
+
+umount "$ROOTFS_BUILD_DIR/etc/resolv.conf"
+umount "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
+umount "$ROOTFS_BUILD_DIR/mnt"
+
+umount -l "$ROOTFS_BUILD_DIR/dev"
+umount -l "$ROOTFS_BUILD_DIR/proc"
+
+apparent_size="$(du -xsm "$ROOTFS_BUILD_DIR" | awk '{ print $1 }')"
+# this can fail because of the host FS
+#mke2fs -L "system" -U "$ROOTFS_UUID" -d "$ROOTFS_BUILD_DIR" \
+mke2fs -L "system" -U "$ROOTFS_UUID" -d "$ROOTFS_BUILD_DIR" \
+	-O "^has_journal" \
+	-m 2 \
+	-t ext4 \
+	"$dest_img" \
+	$(( apparent_size * 105 / 100 + ROOTFS_WIGGLEROOM_MB ))M 2>&1
+
+umount "$ROOTFS_BUILD_DIR"
+rm -rf "$ROOTFS_BUILD_DIR"

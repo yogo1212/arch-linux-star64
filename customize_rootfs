@@ -1,0 +1,23 @@
+#!/bin/sh -e
+
+rootfs="$1"
+
+# runs as root inside the target rootfs
+# the repo is mounted at /mnt
+# relies on qemu-riscv64-static
+
+for s in rootfs-hook.d/*
+do
+	if [ ! -x "$s" ]; then
+		echo "skipping $s -- has no executable bit" >&2
+		continue
+	fi
+
+	echo "running hook: $s"
+	if [ "$s" != "${s%.nochroot}" ]; then
+		s="$(readlink -f "$s")"
+		( cd "$rootfs" ; "$s" ; )
+	else
+		chroot "$rootfs" "/mnt/$s"
+	fi
+done

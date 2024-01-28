@@ -1,0 +1,66 @@
+#!/bin/bash -e
+
+if [ -z "$INSTALL_OPENSSH" ]; then
+	echo -n "Install and enable openssh? [Y/n] "
+	read install_openssh
+	if [ "x$install_openssh" != 'xn' ]; then
+		INSTALL_OPENSSH=1
+	fi
+fi
+
+if [ "$INSTALL_OPENSSH" = 1 ]; then
+	chroot . pacman --noconfirm -S openssh
+	chroot . systemctl enable sshd
+fi
+
+# if the user hasn't specified a ROOT_SSH_KEY, offer to pick one from ~/.ssh/
+if [ -z "$ROOT_SSH_KEY" ] && [ -f ./etc/ssh/sshd_config ]; then
+	no_ssh_key_opt="/no ssh key/"
+
+	mapfile -t ssh_keys < <(ls ~/.ssh/*.pub)
+
+	# TODO there might be no SSH keys
+	select key in "$no_ssh_key_opt" "${ssh_keys[@]}"
+	do
+		if [ -n "$key" ] && [ "$key" != "$no_ssh_key_opt" ]; then
+			ROOT_SSH_KEY="$key"
+		fi
+		break
+	done
+fi
+
+if [ -n "$ROOT_SSH_KEY" ]; then
+	mkdir -p ./root/.ssh
+	chmod 700 ./root/.ssh
+
+	cat "$ROOT_SSH_KEY" > ./root/.ssh/authorized_keys
+fi
+
+if [ -z "$ROOT_PW" ]; then
+	echo "root:$ROOT_PW" | chpasswd -P "$(readlink -f .)"
+elif [ -z "$NO_ROOT_PW" ]; then
+	echo -n "Set a root password? [y/N] "
+	read set_root_pw
+	[ "x$set_root_pw" = 'xy' ] && chroot . passwd
+fi
+
+if [ -f ./etc/ssh/sshd_config ]; then
+	if [ -z "$KEEP_SSH_KBD_PW" ]; then
+		echo -n "Disable SSH password/keyboard authentication? [Y/n] "
+		read disable_kbd_auth
+		if [ "x$disable_kbd_auth" != "xn" ]; then
+			DISABLE_SSH_KBD_PW=1
+		fi
+	fi
+
+	if [ "$KEEP_SSH_KBD_PW" = 0 ]; then
+		for setting in KbdInteractiveAuthentication PasswordAuthentication
+		do
+			if grep -qE "^$setting " ./etc/ssh/sshd_config; then
+				sed -i "s/^$setting yes/$setting no/" ./etc/ssh/sshd_config
+			else
+				echo "$setting no" >> ./etc/ssh/sshd_config
+			fi
+		done
+	fi
+fi

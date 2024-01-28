@@ -1,0 +1,15 @@
+#!/bin/sh
+
+echo "Setting journal storage type to volatile"
+mkdir /etc/systemd/journald.conf.d/
+
+cat >/etc/systemd/journald.conf.d/50-local.conf <<EOF
+[Journal]
+Storage=volatile
+EOF
+
+# TODO /run /var/run
+# TODO systemd also has tmp.mount
+cat >>/etc/fstab <<EOF
+tmpfs             /tmp           tmpfs   nosuid,nodev,noatime 0 0
+EOF

@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+img="$1"
+shift
+
+dev="$DISK_DEV"
+
+sudo_or_not() {
+	if [ -w "$dev" ]; then
+		"$@"
+	else
+		sudo "$@"
+	fi
+}
+
+dev_size="$(sudo_or_not blockdev --getsize64 "$dev")"
+img_size="$(stat -c '%s' "$img")"
+if [ "$dev_size" -lt "$img_size" ]; then
+	echo "dev '$dev' is too small ($dev_size) to hold image ($img_size)" >&2
+	exit 1
+fi
+
+sudo_or_not dd if="$img" of="$dev" bs=4096 conv=notrunc
+sync
+
+last_part="$(sudo_or_not sfdisk -o "Device,UUID,Name" -l "$dev" | tail -n 1)"
+if [ "$(echo "$last_part" | awk '{ $1=$2=""; print $0 }')" != 'system' ]; then
+	echo "the last partition of '$dev' is not 'system'"
+	exit 1
+fi
+
+# TODO identification using UUIDs would be nicer..
+
+part_num="$(echo "$last_part" | awk '{ print $1 }' | sed -E 's/^.*[^0-9]([0-9]*)$/\1/')"
+
+echo "- +" | sudo_or_not sfdisk -N "$part_num" "$dev"
+sudo_or_not partprobe "$dev"
+
+sudo_or_not resize2fs "$part_dev"
+sync
