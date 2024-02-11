@@ -1,5 +1,3 @@
-# uboot-tools is required
-
 BUILD_DIR = build
 DL_DIR = dl
 
@@ -40,8 +38,6 @@ UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 
 UBOOT_ENV_NAME = star64
 UBOOT_DEFAULT_ENV = $(UBOOT_CLONE)/board/starfive/visionfive2/$(UBOOT_ENV_NAME).env
-
-# $(UBOOT_CLONE)/tools/mkimage || mkimage
 
 IMG_NAME ?= $(BUILD_DIR)/star64.img
 
