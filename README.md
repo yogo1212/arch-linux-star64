@@ -1,3 +1,6 @@
+**WARNING - my UART adapter broke and this is still untested.**
+**Until a new one arrives and I find some time for testing, this is for informational purposes only.**
+
 Create an image of Arch Linux to write onto a SD flash card or eMMC flash chip for the Star64 SBC.
 Try to do that with as 'upstream' as possible.
 In principle, it should be possible to create images for other distribution's as well.
