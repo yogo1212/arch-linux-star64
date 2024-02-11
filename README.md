@@ -9,8 +9,6 @@ Run `make` to create the image and use dd, Etcher, or so to install it.
 Supplying a block device as as `IMG_NAME` (e.g. `make "IMG_NAME=/dev/mmcblkX"`) will cause the image to be written directly to the block device.
 This allows the root partition to use all available space - and the amount of writes is reduced to a minimum because gaps don't have to be filled.
 
-For convenience, `DISK_DEV=/dev/mmcblkX make fit` can be used to flash an existing image and automatically resize the system partition.
-
 # requirements
 
 - subuid/subgid entries for the user running `make`

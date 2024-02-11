@@ -55,10 +55,6 @@ clean:
 	[ ! -d $(UBOOT_CLONE) ] || make -C $(UBOOT_CLONE) clean
 	[ ! -d $(OPENSBI_CLONE) ] || make -C $(OPENSBI_CLONE) clean
 
-.PHONY: fit
-fit: $(IMG_NAME)
-	./fit_image $(IMG_NAME)
-
 $(IMG_NAME): $(ROOTFS_IMG) $(UBOOT_ITB) $(UBOOT_SPL)
 	ROOTFS_IMG=$(ROOTFS_IMG) UBOOT_ITB=$(UBOOT_ITB) UBOOT_SPL=$(UBOOT_SPL) ./compile_image $@
 
