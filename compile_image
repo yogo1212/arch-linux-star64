@@ -68,13 +68,13 @@ EOF
 # boot partition-type = 0xC
 # rootfs partition-type = 0x83
 
-# TODO remove parted dependency?
-sudo_or_not parted -s "$dev_or_file" unit B print |\
-	awk '/^Number/{p=1;next}; p{gsub(/[^[:digit:]]/, "", $2); gsub(/[^[:digit:]]/, "", $4); print $5 "|" $2 "|" $4}' |\
-	while read line; do
-		name="$(echo "$line" | cut -f1 -d'|')"
-		part_offset="$(echo "$line" | cut -f2 -d'|')"
-		part_size="$(echo "$line" | cut -f3 -d'|')"
+sudo_or_not sfdisk --bytes -o "Start,Size,Sectors,Name" -q -l "$dev_or_file" | tail -n +2 |\
+	while read part_start_sector part_size part_sectors name; do
+		# there's this silly game with disk interfaces where you really want to do sectors-only but you can't.
+
+		# divide part_size by part_sectors to get the sector size
+		part_offset="$(( part_size / part_sectors * part_start_sector ))"
+
 		case "$name" in
 		spl)
 			file="$UBOOT_SPL"
