@@ -4,7 +4,7 @@ cd /boot
 
 dracut_options=('--compress=zstd' '-o' ' network cifs nfs ')
 
-if [ "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]; then
+if [ "$(stat -c %d:%i /)" = "$(stat -c %d:%i /proc/1/root/.)" ]; then
 	# native build
 	dracut_options+=('--hostonly')
 	rootfs_uuid="$(blkid -s UUID -o value "$(findmnt -n -o SOURCE /)")"
