@@ -28,12 +28,14 @@ pad_align_file_size_mb() {
 	pad_align_size_mb "$size" "$@"
 }
 
-offset_mb=2
+offset_mb=2 # enough space for gpt header
 spl_mb="$(pad_align_file_size_mb "$UBOOT_SPL" 1 2)"
 itb_mb="$(pad_align_file_size_mb "$UBOOT_ITB" 2 2)"
-rootfs_mb=$(pad_align_file_size_mb "$ROOTFS_IMG" 0 2)
+rootfs_mb="$(pad_align_file_size_mb "$ROOTFS_IMG" 0 2)"
+# TODO this isn't necessarily 1 MB
+secondary_gpt_mb=1
 
-img_size=$(( (offset_mb + spl_mb + itb_mb + rootfs_mb) * 1024 * 1024 ))
+img_size=$(( (offset_mb + spl_mb + itb_mb + rootfs_mb + secondary_gpt_mb) * 1024 * 1024 ))
 
 if [ -b "$dev_or_file" ]; then
 	if [ "$(sudo_or_not blockdev --getsize64 "$dev_or_file")" -lt "$img_size" ]; then
@@ -41,7 +43,6 @@ if [ -b "$dev_or_file" ]; then
 		exit 1
 	fi
 else
-	# TODO allow using more space
 	truncate -s "$img_size" "$dev_or_file"
 fi
 
