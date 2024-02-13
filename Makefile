@@ -8,6 +8,8 @@ ARCH_LINUX_MIRROR = https://riscv.mirror.pkgbuild.com
 BASE_ROOTFS_TAR = $(DL_DIR)/base_rootfs.tar.zst
 BASE_ROOTFS_URL = $(ARCH_LINUX_MIRROR)/images/archriscv-latest.tar.zst
 
+DEV_OR_IMG ?= $(BUILD_DIR)/star64.img
+
 DTB_REL_PATH = boot/star64.dtb
 
 LINUX_PKG = $(DL_DIR)/linux.pkg.tar.zst
@@ -39,10 +41,8 @@ UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 UBOOT_ENV_NAME = star64
 UBOOT_DEFAULT_ENV = $(UBOOT_CLONE)/board/starfive/visionfive2/$(UBOOT_ENV_NAME).env
 
-IMG_NAME ?= $(BUILD_DIR)/star64.img
-
 .PHONY: .default
-default: $(IMG_NAME)
+default: $(DEV_OR_IMG)
 
 $(BASE_ROOTFS_TAR): | $(DL_DIR)
 	wget -O $@ $(BASE_ROOTFS_URL)
@@ -55,7 +55,7 @@ clean:
 	[ ! -d $(UBOOT_CLONE) ] || make -C $(UBOOT_CLONE) clean
 	[ ! -d $(OPENSBI_CLONE) ] || make -C $(OPENSBI_CLONE) clean
 
-$(IMG_NAME): $(ROOTFS_IMG) $(UBOOT_ITB) $(UBOOT_SPL)
+$(DEV_OR_IMG): $(ROOTFS_IMG) $(UBOOT_ITB) $(UBOOT_SPL)
 	ROOTFS_IMG=$(ROOTFS_IMG) UBOOT_ITB=$(UBOOT_ITB) UBOOT_SPL=$(UBOOT_SPL) ./compile_image $@
 
 $(LINUX_PKG): | $(DL_DIR)

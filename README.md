@@ -6,7 +6,7 @@ Try to do that with as 'upstream' as possible.
 In principle, it should be possible to create images for other distribution's as well.
 
 Run `make` to create the image and use dd, Etcher, or so to install it.
-Supplying a block device as as `IMG_NAME` (e.g. `make "IMG_NAME=/dev/mmcblkX"`) will cause the image to be written directly to the block device.
+Supplying a block device as as `DEV_OR_IMG` (e.g. `make "DEV_OR_IMG=/dev/mmcblkX"`) will cause the image to be written directly to the block device.
 This allows the root partition to use all available space - and the amount of writes is reduced to a minimum because gaps don't have to be filled.
 
 # requirements
