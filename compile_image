@@ -113,3 +113,4 @@ sudo_or_not sfdisk --bytes -o "Device,Start,Size,Sectors,Name" -q -l "$dev_or_fi
 		fi
 	done
 
+[ ! -b "$dev_or_file" ] || sync
