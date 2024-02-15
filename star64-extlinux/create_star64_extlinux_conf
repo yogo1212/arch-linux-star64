@@ -33,7 +33,7 @@ do
 
 label Arch Linux
     kernel $kernel
-    fdt $DTB_PATH
+    fdtdir /usr/lib/modules/$kver/dtb/
     append console=tty1 console=ttyS0,115200 rootwait earlycon=sbi root=UUID=$rootfs_uuid
     initrd /boot/$initrd
 EOF
@@ -42,7 +42,7 @@ EOF
 
 label Arch Linux (no initrd)
     kernel $kernel
-    fdt $DTB_PATH
+    fdtdir /usr/lib/modules/$kver/dtb/
     append console=tty1 console=ttyS0,115200 rootwait earlycon=sbi root=UUID=$rootfs_uuid
 EOF
 done

@@ -6,18 +6,15 @@ arch=('riscv64')
 url="TODO"
 license=('GPL2')
 depends=('dracut')
-source=("$SF2_DTB_URL")
-sha256sums=('76d638a042a909101d8a5e247880222b2405ab2373fe44462c3e9e7f445085f1')
+source=('create_star64_extlinux_conf' \
+        'libalpm.hook')
+sha256sums=('57f6c1b44a63d6ff28cdda954a567c32234be844cbc44efd4560c7952e1b9569' \
+            '79c43d0b029e2a02ef25d98917fd6ad0588ee7cbf5266dc87c48ef2a76f8e43f')
 
 package() {
   mkdir -p "$pkgdir/boot/extlinux" "$pkgdir/usr/bin" "$pkgdir/usr/share/libalpm/hooks/"
 
-	# TODO not super nice
-	dtb_path=/boot/star64.dtb
-  sed -E "s|\\\$DTB_PATH|$dtb_path|" "$srcdir/../create_star64_extlinux_conf" > "$pkgdir/usr/bin/create_star64_extlinux_conf"
-  chmod +x "$pkgdir/usr/bin/create_star64_extlinux_conf"
+	cp create_star64_extlinux_conf "$pkgdir/usr/bin/"
 
-	cp jh7110-visionfive-v2.dtb "$pkgdir/$dtb_path"
-
-	cp "$srcdir/../libalpm.hook" "$pkgdir/usr/share/libalpm/hooks/90-create-star64-extlinux-conf.hook"
+	cp libalpm.hook "$pkgdir/usr/share/libalpm/hooks/90-create-star64-extlinux-conf.hook"
 }

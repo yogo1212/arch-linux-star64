@@ -10,8 +10,6 @@ BASE_ROOTFS_URL = $(ARCH_LINUX_MIRROR)/images/archriscv-latest.tar.zst
 
 DEV_OR_IMG ?= $(BUILD_DIR)/star64.img
 
-DTB_REL_PATH = boot/star64.dtb
-
 LINUX_PKG = $(DL_DIR)/linux.pkg.tar.zst
 
 OPENSBI_CLONE = $(BUILD_DIR)/opensbi
@@ -30,7 +28,6 @@ ROOTFS_WIGGLEROOM_MB ?= 256
 
 export ROOTFS_WIGGLEROOM_MB
 
-SF2_DTB_URL = https://github.com/starfive-tech/VisionFive2/releases/download/JH7110_VF2_515_v5.10.3/jh7110-visionfive-v2.dtb
 STAR64_EXTLINUX_PKG = $(BUILD_DIR)/star64-extlinux.pkg.tar.zst
 
 UBOOT_CLONE = $(BUILD_DIR)/u-boot
@@ -95,7 +92,7 @@ $(ROOTFS_UUID):
 
 $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
 	cd star64-extlinux ;\
-		CARCH=riscv64 makepkg -f ROOTFS_UUID=$(shell cat $(ROOTFS_UUID)) SF2_DTB_URL=$(SF2_DTB_URL)
+		CARCH=riscv64 makepkg -f ROOTFS_UUID=$(shell cat $(ROOTFS_UUID))
 	# TODO pass in version from make as well? could then be used to construct filename
 	cp star64-extlinux/star64-extlinux-0.1-1-riscv64.pkg.tar.zst $@
 
