@@ -88,7 +88,7 @@ $(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(STAR64_EXTLINUX_
 			./setup_rootfs "$@"
 
 $(ROOTFS_UUID):
-	uuidgen > $@
+	[ -f /proc/sys/kernel/random/uuid ]&& cat /proc/sys/kernel/random/uuid > $@ || uuidgen > $@
 
 $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
 	cd star64-extlinux ;\
