@@ -36,7 +36,7 @@ if [ -n "$ROOT_SSH_KEY" ]; then
 	cat "$ROOT_SSH_KEY" > ./root/.ssh/authorized_keys
 fi
 
-if [ -z "$ROOT_PW" ]; then
+if [ -n "$ROOT_PW" ]; then
 	echo "root:$ROOT_PW" | chpasswd -P "$(readlink -f .)"
 elif [ -z "$NO_ROOT_PW" ]; then
 	echo -n "Set a root password? [y/N] "
