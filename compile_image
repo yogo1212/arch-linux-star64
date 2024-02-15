@@ -63,7 +63,7 @@ LINUX_FS_PARTITION_TYPE_UUID=0FC63DAF-8483-4772-8E79-3D69D8477DE4
 sudo_or_not sfdisk -X gpt "$dev_or_file" <<EOF
 name=spl,    start=${offset_mb}MiB, size=${spl_mb}MiB, type=$SPL_PARTITION_TYPE_UUID
 name=uboot,  size=${itb_mb}MiB,                        type=$UBOOT_PARTITION_TYPE_UUID
-name=system, bootable,                                 type=$LINUX_FS_PARTITION_TYPE_UUID
+name=system, attrs=LegacyBIOSBootable,                 type=$LINUX_FS_PARTITION_TYPE_UUID
 EOF
 
 # boot partition-type = 0xC
