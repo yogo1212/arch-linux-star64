@@ -1,0 +1,3 @@
+#!/bin/sh
+
+hostnamectl hostname "${HOSTNAME-star64}

@@ -35,6 +35,8 @@ Remember to add the executable bit.
 The pre-existing scripts use these:
 
 ```
+EDITOR
+HOSTNAME
 ROOT_PW
 NO_ROOT_PW
 ROOT_SSH_KEY
