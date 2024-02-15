@@ -69,10 +69,8 @@ EOF
 # boot partition-type = 0xC
 # rootfs partition-type = 0x83
 
-RESIZE_ROOTFS_IMG="$ROOTFS_IMG.resize"
-
-sudo_or_not sfdisk --bytes -o "Start,Size,Sectors,Name" -q -l "$dev_or_file" | tail -n +2 |\
-	while read part_start_sector part_size part_sectors name; do
+sudo_or_not sfdisk --bytes -o "Device,Start,Size,Sectors,Name" -q -l "$dev_or_file" | tail -n +2 |\
+	while read part_dev part_start_sector part_size part_sectors name; do
 		# there's this silly game with disk interfaces where you really want to do sectors-only but you can't.
 
 		# divide part_size by part_sectors to get the sector size
@@ -99,20 +97,19 @@ sudo_or_not sfdisk --bytes -o "Start,Size,Sectors,Name" -q -l "$dev_or_file" | t
 			exit 1
 		fi
 
-		# use all available space for the root filsystem
-		if [ -b "$dev_or_file" ] && [ "$name" = system ] && [ "$file_size" != "$part_size" ]; then
-			cp "$ROOTFS_IMG" "$RESIZE_ROOTFS_IMG"
-			truncate -s "$part_size" "$RESIZE_ROOTFS_IMG"
-			resize2fs "$RESIZE_ROOTFS_IMG" "$part_size"
-			file="$RESIZE_ROOTFS_IMG"
-		fi
-
 		if [ $(( part_offset % 4096 )) -ne 0 ] || [ $(( part_size % 4096 )) -ne 0 ]; then
 			echo "partition $name size ($part_size) or offset ($part_offset) not a multiple of 4096" >&2
 			exit 1
 		fi
 
 		sudo_or_not dd "if=$file" "of=$dev_or_file" seek=$(( part_offset / 4096 )) bs=4096 conv=notrunc
+
+		# use all available space for the root filsystem
+		# resizing a file first and then writing it can take forever
+		# do the resize afterwards 'live'
+		if [ -b "$dev_or_file" ] && [ "$name" = system ] && [ "$file_size" != "$part_size" ]; then
+			sync
+			sudo_or_not resize2fs "$part_dev"
+		fi
 	done
 
-[ ! -f "$RESIZE_ROOTFS_IMG" ] || rm "$RESIZE_ROOTFS_IMG"
