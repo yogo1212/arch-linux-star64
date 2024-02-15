@@ -33,7 +33,7 @@ The pre-existing scripts use these:
 
 ```
 EDITOR
-HOSTNAME
+IMG_HOSTNAME
 ROOT_PW
 NO_ROOT_PW
 ROOT_SSH_KEY
