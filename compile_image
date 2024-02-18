@@ -49,13 +49,21 @@ fi
 # just to get rid of warnings about overwriting partition tables
 sudo_or_not dd "if=/dev/zero" "of=$dev_or_file" count=4 bs=4096 conv=notrunc
 
-# OpenSBI (ROM) boots the secondary program loader from this GPT partition
-SPL_PARTITION_TYPE_UUID=5B193300-FC78-40CD-8002-E86C45580B47
-UBOOT_PARTITION_TYPE_UUID=2E54B353-1271-4842-806F-E436D6AF6985
-# TODO ^^^ in the u-boot readme, spl is read from 2E54B353..  ^^^
-# and UBOOT_ITB should lie on BC13C2FF-59E6-4262-A352-B275FD6F7172
+# ROM firmware boots the secondary program loader from this GPT partition
+SPL_PARTITION_TYPE_UUID=2E54B353-1271-4842-806F-E436D6AF6985
 
-# rootfs
+UBOOT_PARTITION_TYPE_UUID=BC13C2FF-59E6-4262-A352-B275FD6F7172
+# u-boot uses the second partition
+# TODO might want to patch selection by GPT partition type selection into u-boot
+# similar to what CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_PARTITION_TYPE does
+
+# the visionfive2 board-specific partitioning from u-boot uses this:
+#     MS_BASIC_DATA_PARTITION_TYPE_UUID=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
+# but that partition won't be detected as being bootable.
+# the generic boot code in u-boot looks for this:
+#     EFI_SYSTEM_PARTITION_TYPE_UUID=C12A7328-F81F-11D2-BA4B-00A0C93EC93B
+# that works.
+# but for now, rely on the 'legacy BIOS bootable' attribute instead and be modest:
 LINUX_FS_PARTITION_TYPE_UUID=0FC63DAF-8483-4772-8E79-3D69D8477DE4
 
 # TODO -w always
