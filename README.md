@@ -16,7 +16,7 @@ This allows the root partition to use all available space - and the amount of wr
 - enough RAM to hold the rootfs
 - riscv64-linux-gnu-gcc
 
-# sources
+# overview
 
 - U-Boot SPL with OpenSBI
 - U-Boot payload (reads extlinux.conf)
