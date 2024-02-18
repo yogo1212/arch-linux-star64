@@ -38,7 +38,7 @@ UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 UBOOT_ENV_NAME = star64
 UBOOT_DEFAULT_ENV = $(UBOOT_CLONE)/board/starfive/visionfive2/$(UBOOT_ENV_NAME).env
 
-.PHONY: .default
+.PHONY: default
 default: $(DEV_OR_IMG)
 
 $(BASE_ROOTFS_TAR): | $(DL_DIR)
