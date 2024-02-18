@@ -100,8 +100,6 @@ $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
 uboot: $(OPENSBI_BIN) $(UBOOT_DEFAULT_ENV) | $(UBOOT_CLONE)
 	make -C $(UBOOT_CLONE) starfive_visionfive2_defconfig
 	cd $(UBOOT_CLONE) ; \
-		scripts/config \
-			--set-str CONFIG_ENV_SOURCE_FILE star64
 	make -C $(UBOOT_CLONE) \
 		OPENSBI=$(abspath $(OPENSBI_BIN))
 
