@@ -1,0 +1,20 @@
+pkgname=uboot-extlinux-conf-hook
+pkgver=0.1
+pkgrel=1
+pkgdesc="Install/Update extlinux.conf for u-boot from an libalpm hook"
+arch=('riscv64')
+url="TODO"
+license=('GPL2')
+depends=('dracut')
+source=('create_uboot_extlinux_conf' \
+        'libalpm.hook')
+sha256sums=('57f6c1b44a63d6ff28cdda954a567c32234be844cbc44efd4560c7952e1b9569' \
+            '46412c74e949ff8937419d3543bff617d93afb18169e23ac5e3a640c985eb0cb')
+
+package() {
+  mkdir -p "$pkgdir/boot/extlinux" "$pkgdir/usr/bin" "$pkgdir/usr/share/libalpm/hooks/"
+
+	cp create_uboot_extlinux_conf "$pkgdir/usr/bin/"
+
+	cp libalpm.hook "$pkgdir/usr/share/libalpm/hooks/90-create-uboot-extlinux-conf.hook"
+}

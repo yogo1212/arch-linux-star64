@@ -28,7 +28,7 @@ ROOTFS_WIGGLEROOM_MB ?= 256
 
 export ROOTFS_WIGGLEROOM_MB
 
-STAR64_EXTLINUX_PKG = $(BUILD_DIR)/star64-extlinux.pkg.tar.zst
+STAR64_EXTLINUX_PKG = $(BUILD_DIR)/uboot-extlinux-conf-hook.pkg.tar.zst
 
 UBOOT_CLONE = $(BUILD_DIR)/u-boot
 UBOOT_GIT = https://github.com/u-boot/u-boot.git
@@ -91,10 +91,10 @@ $(ROOTFS_UUID):
 	[ -f /proc/sys/kernel/random/uuid ]&& cat /proc/sys/kernel/random/uuid > $@ || uuidgen > $@
 
 $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
-	cd star64-extlinux ;\
+	cd uboot-extlinux-conf-hook ;\
 		CARCH=riscv64 makepkg -f ROOTFS_UUID=$(shell cat $(ROOTFS_UUID))
 	# TODO pass in version from make as well? could then be used to construct filename
-	cp star64-extlinux/star64-extlinux-0.1-1-riscv64.pkg.tar.zst $@
+	cp uboot-extlinux-conf-hook/uboot-extlinux-conf-hook-0.1-1-riscv64.pkg.tar.zst $@
 
 .PHONY: uboot
 uboot: $(OPENSBI_BIN) $(UBOOT_DEFAULT_ENV) | $(UBOOT_CLONE)

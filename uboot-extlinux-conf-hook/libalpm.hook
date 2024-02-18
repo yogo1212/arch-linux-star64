@@ -7,6 +7,6 @@ Target = usr/lib/dracut/*
 Target = usr/lib/firmware/*
 
 [Action]
-Description = Running create_extlinux_conf...
+Description = Running create_extlinux_conf for U-Boot...
 When = PostTransaction
-Exec = /usr/bin/create_star64_extlinux_conf
+Exec = /usr/bin/create_uboot_extlinux_conf
