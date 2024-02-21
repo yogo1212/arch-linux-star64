@@ -35,9 +35,6 @@ UBOOT_GIT = https://github.com/u-boot/u-boot.git
 UBOOT_SPL = $(UBOOT_CLONE)/spl/u-boot-spl.bin.normal.out
 UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 
-UBOOT_ENV_NAME = star64
-UBOOT_DEFAULT_ENV = $(UBOOT_CLONE)/board/starfive/visionfive2/$(UBOOT_ENV_NAME).env
-
 .PHONY: default
 default: $(DEV_OR_IMG)
 
@@ -97,15 +94,11 @@ $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
 	cp uboot-extlinux-conf-hook/uboot-extlinux-conf-hook-0.1-1-riscv64.pkg.tar.zst $@
 
 .PHONY: uboot
-uboot: $(OPENSBI_BIN) $(UBOOT_DEFAULT_ENV) | $(UBOOT_CLONE)
+uboot: $(OPENSBI_BIN) | $(UBOOT_CLONE)
 	make -C $(UBOOT_CLONE) starfive_visionfive2_defconfig
 	cd $(UBOOT_CLONE) ; \
 	make -C $(UBOOT_CLONE) \
 		OPENSBI=$(abspath $(OPENSBI_BIN))
-
-.PHONY: $(UBOOT_DEFAULT_ENV)
-$(UBOOT_DEFAULT_ENV): | $(UBOOT_CLONE)
-	./create_default_uboot_env > $@
 
 $(UBOOT_CLONE): | $(BUILD_DIR)
 	git clone $(UBOOT_GIT) $(UBOOT_CLONE)
