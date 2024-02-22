@@ -96,7 +96,6 @@ $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
 .PHONY: uboot
 uboot: $(OPENSBI_BIN) | $(UBOOT_CLONE)
 	make -C $(UBOOT_CLONE) starfive_visionfive2_defconfig
-	cd $(UBOOT_CLONE) ; \
 	make -C $(UBOOT_CLONE) \
 		OPENSBI=$(abspath $(OPENSBI_BIN))
 
