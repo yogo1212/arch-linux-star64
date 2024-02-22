@@ -1,13 +1,15 @@
 Create an image of Arch Linux to write onto a SD flash card or eMMC flash chip for the Star64 SBC.
-Try to do that with as 'upstream' as possible.
-In principle, it should be possible to create images for other distribution's as well.
+Try to do that using software that is typically available and keeping the product as close to upstream as possible.
+U-Boot is built for Starfive's VisionFive 2 board and the device tree is also for the VisionFive 2.
+The Star64 is not 100% compatible. The device tree could be updated and the kernel needs patching!
 
-Run `make` to create the image and use dd, Etcher, or so to install it.
+Run `make` to create an image file and use dd, Etcher, or so to install it.
 Supplying a block device as as `DEV_OR_IMG` (e.g. `make "DEV_OR_IMG=/dev/mmcblkX"`) will cause the image to be written directly to the block device.
-This allows the root partition to use all available space - and the amount of writes is reduced to a minimum because gaps don't have to be filled.
+This allows the root partition to use all available space, the amount of writes is reduced to a minimum because gaps don't have to be filled, and it's quicker.
 
 # requirements
 
+- util-linux
 - subuid/subgid entries for the user running `make`
   - only the first one is used
   - range needs to be big enough to hold all files from the base file system
