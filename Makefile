@@ -32,8 +32,8 @@ STAR64_EXTLINUX_PKG = $(BUILD_DIR)/uboot-extlinux-conf-hook.pkg.tar.zst
 
 UBOOT_CLONE = $(BUILD_DIR)/u-boot
 UBOOT_GIT = https://github.com/u-boot/u-boot.git
-UBOOT_SPL = $(UBOOT_CLONE)/spl/u-boot-spl.bin.normal.out
 UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
+UBOOT_SPL = $(UBOOT_CLONE)/spl/u-boot-spl.bin.normal.out
 
 .PHONY: default
 default: $(DEV_OR_IMG)
