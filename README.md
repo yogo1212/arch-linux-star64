@@ -7,6 +7,8 @@ Run `make` to create an image file and use dd, Etcher, or so to install it.
 Supplying a block device as as `DEV_OR_IMG` (e.g. `make "DEV_OR_IMG=/dev/mmcblkX"`) will cause the image to be written directly to the block device.
 This allows the root partition to use all available space, the amount of writes is reduced to a minimum because gaps don't have to be filled, and it's quicker.
 
+In principle, it should be possible to create images for other distribution's as well. Maybe it's worth figuring out how to do that from this repo.
+
 # requirements
 
 - util-linux
@@ -49,3 +51,5 @@ KEEP_SSH_KBD_PW
 - method to install tow-boot or EDK2 XSPI NOR
   - makes this repo obsolete
 - boot using EFI
+
+I'm hesitant to publish a mode that creates an image for the SPI NOR flash. Details on how that is be done are in the table `Flash Boot Address Allocation` from the [JH7110 Boot User Guide](https://doc-en.rvspace.org/VisionFive2/Developer_Guide/JH7110_Boot_UG.pdf). The files can be created from here using `make uboot`.
