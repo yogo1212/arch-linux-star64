@@ -6,10 +6,10 @@ dest_img="$1"
 
 mkdir "$ROOTFS_BUILD_DIR"
 
-# being on a tmpfs inside the mount namespace is really nice but mke2fs has problems with it
-# can limit size of the file system, cleanup is free, and - of course - it's fast
-# so no: mount -t tmpfs none "$ROOTFS_BUILD_DIR"
-# however, not using a tmpfs leads other errors
+# being on a tmpfs inside the mount namespace is really nice.
+# it can limit size of the file system, cleanup is free, and - of course - it's super fast.
+# but mke2fs has problems with it, so no: mount -t tmpfs none "$ROOTFS_BUILD_DIR".
+# however, not using a tmpfs leads other problems
 
 mount -t tmpfs -o noatime none "$ROOTFS_BUILD_DIR"
 
