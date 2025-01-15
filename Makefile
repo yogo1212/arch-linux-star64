@@ -50,7 +50,9 @@ clean:
 	[ ! -d $(OPENSBI_CLONE) ] || make -C $(OPENSBI_CLONE) clean
 
 $(DEV_OR_IMG): $(ROOTFS_IMG) $(UBOOT_ITB) $(UBOOT_SPL)
-	ROOTFS_IMG=$(ROOTFS_IMG) UBOOT_ITB=$(UBOOT_ITB) UBOOT_SPL=$(UBOOT_SPL) ./compile_image $@
+	ROOTFS_IMG=$(ROOTFS_IMG) \
+		UBOOT_ITB=$(UBOOT_ITB) UBOOT_SPL=$(UBOOT_SPL) \
+		./compile_image $@
 
 $(LINUX_PKG): | $(DL_DIR)
 	pkg_filename="$$(tar -xOf $(REPO_DB) "$$(tar -tf $(REPO_DB) | grep -E '^linux-[[:digit:]].*/desc')" | awk '/%FILENAME%/{getline; print}')" ; \
