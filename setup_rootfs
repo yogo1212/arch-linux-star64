@@ -23,7 +23,7 @@ run_mounted() {
 		[ ! -f .env.rootfs-customization ] || grep -v '^#' .env.rootfs-customization
 		echo ./customize_rootfs
 		echo "$ROOTFS_BUILD_DIR"
-	} | xargs -d '\n' env
+	} | xargs -od '\n' env
 }
 
 # this includes /proc/sys/fs/binfmt_misc, which allows running the binaries inside
