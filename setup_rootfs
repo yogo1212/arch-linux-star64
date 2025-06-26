@@ -13,7 +13,7 @@ mkdir "$ROOTFS_BUILD_DIR"
 
 mount -t tmpfs -o noatime none "$ROOTFS_BUILD_DIR"
 
-tar -C "$ROOTFS_BUILD_DIR" -xf "$BASE_ROOTFS_TAR"
+bsdtar -xpf "$BASE_ROOTFS_TAR" -C "$ROOTFS_BUILD_DIR"
 
 mkdir -p "$ROOTFS_BUILD_DIR/boot"
 
