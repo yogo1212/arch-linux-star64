@@ -86,7 +86,7 @@ $(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(STAR64_EXTLINUX_
 			--map-groups=1:$$(sed -nE "s/^$$(id -gn)://p;q" /etc/subgid) \
 			./setup_rootfs "$@"
 
-$(ROOTFS_UUID):
+$(ROOTFS_UUID): | $(BUILD_DIR)
 	[ -f /proc/sys/kernel/random/uuid ]&& cat /proc/sys/kernel/random/uuid > $@ || uuidgen > $@
 
 $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
