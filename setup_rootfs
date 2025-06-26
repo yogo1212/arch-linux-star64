@@ -20,7 +20,7 @@ mkdir -p "$ROOTFS_BUILD_DIR/boot"
 run_mounted() {
 	# exporting in a loop is a hassle
 	{
-		grep -v '^#' .env.rootfs-customization
+		[ ! -f .env.rootfs-customization ] || grep -v '^#' .env.rootfs-customization
 		echo ./customize_rootfs
 		echo "$ROOTFS_BUILD_DIR"
 	} | xargs -d '\n' env
