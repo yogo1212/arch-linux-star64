@@ -15,10 +15,10 @@ $(OPENSBI_CLONE): | $(BUILD_DIR)
 	git clone $(OPENSBI_GIT) $(OPENSBI_CLONE)
 
 $(STAR64_EXTLINUX_PKG): $(ROOTFS_UUID)
-	cd uboot-extlinux-conf-hook ;\
+	cd packages/uboot-extlinux-conf-hook ;\
 		CARCH=riscv64 makepkg -f ROOTFS_UUID=$(shell cat $(ROOTFS_UUID))
 	# TODO pass in version from make as well? could then be used to construct filename
-	cp uboot-extlinux-conf-hook/uboot-extlinux-conf-hook-0.1-1-riscv64.pkg.tar.zst $@
+	cp packages/uboot-extlinux-conf-hook/uboot-extlinux-conf-hook-0.1-1-riscv64.pkg.tar.zst $@
 
 .PHONY: target_device_clean
 target_device_clean:
