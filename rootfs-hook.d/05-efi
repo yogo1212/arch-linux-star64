@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+[ -n "$EFI_MNT" ] || exit 0
+
+mkdir -p "$EFI_MNT"
+chmod 0750 "$EFI_MNT"
+cd "$EFI_MNT"
+
+cat >>/etc/fstab <<EOF
+UUID=$EFI_UUID    /efi           vfat    fmask=0137,dmask=0027 0 2
+EOF

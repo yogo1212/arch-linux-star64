@@ -28,6 +28,12 @@ TARGET_DEVICE ?= star64
 
 include $(TARGET_DEVICE).mk
 
+ifdef USE_EFI
+EFI_MNT = /efi
+EFI_IMG = $(BUILD_DIR)/efi-$(TARGET_DEVICE).img
+EFI_UUID = $(BUILD_DIR)/efi-$(TARGET_DEVICE).uuid
+endif
+
 .PHONY: default
 default: $(DEV_OR_IMG)
 
@@ -53,11 +59,12 @@ $(PACMAN_CACHE_DIR): | $(DL_DIR)
 $(REPO_DB): | $(DL_DIR)
 	wget -O $@ $(REPO_DB_URL)
 
-$(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(TARGET_DEVICE_ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_DIR)
+$(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(EFI_UUID) $(EFI_IMG) $(TARGET_DEVICE_ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_DIR)
 	# TODO non-static ids, maybe detect and ask for sudo
 	BASE_ROOTFS_TAR=$(BASE_ROOTFS_TAR) LINUX_PKG=$(LINUX_PKG) \
 		PACMAN_CACHE_DIR=$(PACMAN_CACHE_DIR) \
 		ROOTFS_BUILD_DIR=$(ROOTFS_BUILD_DIR) ROOTFS_UUID=$(shell cat $(ROOTFS_UUID)) \
+		EFI_MNT=$(EFI_MNT) EFI_UUID=$(shell cat $(EFI_UUID)) EFI_IMG=$(EFI_IMG) \
 		unshare -Umr \
 			--map-users=1:$$(sed -nE "s/^$$(id -un)://p;q" /etc/subuid) \
 			--map-groups=1:$$(sed -nE "s/^$$(id -gn)://p;q" /etc/subgid) \
@@ -65,6 +72,9 @@ $(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(TARGET_DEVICE_RO
 
 $(ROOTFS_UUID): | $(BUILD_DIR)
 	[ -f /proc/sys/kernel/random/uuid ] && cat /proc/sys/kernel/random/uuid > $@ || uuidgen > $@
+
+$(EFI_UUID): | $(BUILD_DIR)
+	tr -cd '0-9A-F' < /dev/urandom | head -c 8 | sed 's/./&-/4' > $@
 
 .PHONY: uboot
 uboot: | $(UBOOT_CLONE)

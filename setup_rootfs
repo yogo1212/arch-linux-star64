@@ -34,6 +34,11 @@ mount --bind . "$ROOTFS_BUILD_DIR/mnt"
 mount --bind "$PACMAN_CACHE_DIR" "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
 mount --bind /etc/resolv.conf "$ROOTFS_BUILD_DIR/etc/resolv.conf"
 
+if [ -n "$EFI_MNT" ]; then
+	mkdir -p "$ROOTFS_BUILD_DIR/efi"
+	mount -t tmpfs -o noatime none "$ROOTFS_BUILD_DIR/efi"
+fi
+
 fork_pipe_wait() {
 	local fd cmd="$1"
 	local pipe wait_pipe
@@ -102,6 +107,10 @@ cleanup_mnt() {
 		umount_secondaries
 	fi
 
+	if mountpoint -q "$ROOTFS_BUILD_DIR/efi"; then
+		umount "$ROOTFS_BUILD_DIR/efi"
+	fi
+
 	umount "$ROOTFS_BUILD_DIR"
 	rmdir "$ROOTFS_BUILD_DIR"
 }
@@ -116,6 +125,13 @@ run_mounted
 
 umount_secondaries
 
+if [ -n "$EFI_MNT" ]; then
+	mkfs.vfat -i "${EFI_UUID//-/}" -F 32 "$EFI_IMG"
+	# there should be no hidden files here
+	mcopy -i "$EFI_IMG" -spQ "$ROOTFS_BUILD_DIR"/efi/* ::
+
+	umount "$ROOTFS_BUILD_DIR/efi"
+fi
 
 apparent_size="$(du -xsm "$ROOTFS_BUILD_DIR" | awk '{ print $1 }')"
 # this can fail because of the host FS
