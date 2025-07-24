@@ -25,6 +25,7 @@ UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 UBOOT_SPL = $(UBOOT_CLONE)/spl/u-boot-spl.bin.normal.out
 
 TARGET_DEVICE ?= star64
+export TARGET_DEVICE
 
 include $(TARGET_DEVICE).mk
 
