@@ -135,7 +135,6 @@ fi
 
 apparent_size="$(du -xsm "$ROOTFS_BUILD_DIR" | awk '{ print $1 }')"
 # this can fail because of the host FS
-#mke2fs -L "system" -U "$ROOTFS_UUID" -d "$ROOTFS_BUILD_DIR" \
 mke2fs -F -L "system" -U "$ROOTFS_UUID" -d "$ROOTFS_BUILD_DIR" \
 	-O "^has_journal" \
 	-m 2 \
