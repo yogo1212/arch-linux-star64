@@ -8,8 +8,9 @@ cat >/etc/systemd/journald.conf.d/50-local.conf <<EOF
 Storage=volatile
 EOF
 
-# TODO /run /var/run
-# TODO systemd also has tmp.mount
 cat >>/etc/fstab <<EOF
 tmpfs             /tmp           tmpfs   nosuid,nodev,noatime 0 0
+tmpfs       /var/lib/systemd/timesync tmpfs       defaults 0 0
 EOF
+
+# TODO /var/run
