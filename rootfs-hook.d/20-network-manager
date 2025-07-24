@@ -1,3 +1,3 @@
 #!/bin/sh
 
-pacman --noconfirm -S networkmanager
+pacman --noconfirm -S --needed networkmanager

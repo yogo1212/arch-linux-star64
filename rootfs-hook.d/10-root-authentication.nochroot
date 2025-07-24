@@ -9,7 +9,7 @@ if [ -z "$INSTALL_OPENSSH" ]; then
 fi
 
 if [ "$INSTALL_OPENSSH" = 1 ]; then
-	chroot . pacman --noconfirm -S openssh
+	chroot . pacman --noconfirm -S --needed openssh
 	chroot . systemctl enable sshd
 fi
 
