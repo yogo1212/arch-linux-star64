@@ -49,7 +49,7 @@ if [ -f ./etc/ssh/sshd_config ]; then
 		echo -n "Disable SSH password/keyboard authentication? [Y/n] "
 		read disable_kbd_auth
 		if [ "x$disable_kbd_auth" != "xn" ]; then
-			DISABLE_SSH_KBD_PW=1
+			KEEP_SSH_KBD_PW=0
 		fi
 	fi
 
