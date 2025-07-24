@@ -9,3 +9,5 @@ if [ "$ARCH" = aarch64 ]; then
 fi
 
 pacman --noconfirm -Sy
+
+[ -z "$PACMAN_UPDATE" ] || pacman --noconfirm -Su
