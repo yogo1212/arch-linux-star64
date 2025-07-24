@@ -1,3 +1,11 @@
 #!/bin/sh -e
 
+if [ "$ARCH" = aarch64 ]; then
+	pacman-key --init
+	pacman-key --populate archlinuxarm
+
+	# this stays active through updates
+	killall gpg-agent
+fi
+
 pacman --noconfirm -Sy

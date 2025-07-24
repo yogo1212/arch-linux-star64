@@ -64,6 +64,7 @@ $(ROOTFS_IMG): $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID) $(EFI_UUID) $(EFI_
 	BASE_ROOTFS_TAR=$(BASE_ROOTFS_TAR) LINUX_PKG=$(LINUX_PKG) \
 		PACMAN_CACHE_DIR=$(PACMAN_CACHE_DIR) \
 		ROOTFS_BUILD_DIR=$(ROOTFS_BUILD_DIR) ROOTFS_UUID=$(shell cat $(ROOTFS_UUID)) \
+		ARCH=$(ARCH) \
 		EFI_MNT=$(EFI_MNT) EFI_UUID=$(shell cat $(EFI_UUID)) EFI_IMG=$(EFI_IMG) \
 		unshare -Umr \
 			--map-users=1:$$(sed -nE "s/^$$(id -un)://p;q" /etc/subuid) \
