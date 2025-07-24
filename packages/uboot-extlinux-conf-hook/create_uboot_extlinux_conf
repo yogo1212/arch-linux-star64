@@ -12,7 +12,7 @@ else
 	# inside chroot
 	# TODO get from make
 	dracut_options+=('-N')
-	rootfs_uuid="$(cat /mnt/build/rootfs.uuid)"
+	rootfs_uuid="$(cat /mnt/build/rootfs-star64.uuid)"
 fi
 
 ls "*.initrd" >/dev/null 2>&1 && rm "*.initrd"
