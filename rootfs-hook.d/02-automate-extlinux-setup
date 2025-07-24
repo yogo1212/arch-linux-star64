@@ -1,6 +1,6 @@
 #!/bin/sh
 
-pacman --noconfirm -Sy dracut
+pacman --noconfirm -S dracut
 pacman --noconfirm -U "/mnt/$STAR64_EXTLINUX_PKG"
 
 # this triggers a hook which sets up extlinux.conf
