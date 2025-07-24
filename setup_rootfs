@@ -34,14 +34,88 @@ mount --bind . "$ROOTFS_BUILD_DIR/mnt"
 mount --bind "$PACMAN_CACHE_DIR" "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
 mount --bind /etc/resolv.conf "$ROOTFS_BUILD_DIR/etc/resolv.conf"
 
+fork_pipe_wait() {
+	local fd cmd="$1"
+	local pipe wait_pipe
+	pipe="$(mktemp -u rootfs-builder-$$-cleanup-pipe.XXXXXXXXXX)"
+
+	mkfifo "$pipe"
+
+	( ( cat <"$pipe" >/dev/null ; eval "$cmd" ; ) & ) &
+	# TODO cat has to open the pipe first
+	sleep 3
+
+	exec {fd}<>"$pipe"
+
+	if [ $# -gt 1 ]; then
+		eval "$2=$fd"
+	fi
+
+	rm "$pipe"
+}
+
+subshell_ppid() {
+	# even $( sh -c 'echo $PPID' ) or sh .. | read doesn't necessarily yield the correct result (depending on the shell)
+
+	# this grep sees another file than the awk that follows:
+	# grep PPid < /proc/self/status | awk '{ print $2 }'
+	# awk '/^PPid:/ { print $2 }' < /proc/self/status
+
+	awk '/^PPid:/ { "grep PPid /proc/"$2"/status" | getline ; print $2 }' < /proc/self/status
+}
+
+umount_secondaries() {
+	umount "$ROOTFS_BUILD_DIR/etc/resolv.conf"
+	umount "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
+	umount "$ROOTFS_BUILD_DIR/mnt"
+
+	umount -l "$ROOTFS_BUILD_DIR/dev"
+	umount -l "$ROOTFS_BUILD_DIR/proc"
+}
+
+cleanup_mnt() {
+	# if any processes are still in the mount namespace, umount fails with 'target busy'
+	# pacman forks a gpg-agent
+
+	set +x
+
+	# $$ returns the pid of the shell and doesn't change in subshells
+	local own_pid="$(subshell_ppid)"
+
+	# double-forked, so PPID is not sane ($$ would likely be)
+	local pppid="$1"
+
+	local pids="$(ls /proc/ | grep '[0-9]' | grep -v "^$pppid\$" | grep -v "^$own_pid\$")"
+	local own_mnt_ns="$(stat -Lc '%i' /proc/self/ns/mnt)"
+
+	for pid in $pids; do
+		mnt_ns="/proc/$pid/ns/mnt"
+		[ -r "$mnt_ns" ] || continue
+		[ "$(stat -Lc '%i' "$mnt_ns")" == "$own_mnt_ns" ] || continue
+
+		echo "killing stray process $pid - $(tr '\0' ' ' < "/proc/$pid/cmdline")"
+		kill "$pid"
+	done
+
+	# umount to be able to do rmdir
+	if mountpoint -q "$ROOTFS_BUILD_DIR/etc/resolv.conf"; then
+		umount_secondaries
+	fi
+
+	umount "$ROOTFS_BUILD_DIR"
+	rmdir "$ROOTFS_BUILD_DIR"
+}
+
+fork_pipe_wait "cleanup_mnt $$"
+
+# TODO the whole point of mountns was to be able to utilise cleanup
+# "fork" another mount namespace for ./run_mounted to run in.
+# have the cleanup func run in there (no relying on parent pids or such).
+# wait for cleanup using fds
 run_mounted
 
-umount "$ROOTFS_BUILD_DIR/etc/resolv.conf"
-umount "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
-umount "$ROOTFS_BUILD_DIR/mnt"
+umount_secondaries
 
-umount -l "$ROOTFS_BUILD_DIR/dev"
-umount -l "$ROOTFS_BUILD_DIR/proc"
 
 apparent_size="$(du -xsm "$ROOTFS_BUILD_DIR" | awk '{ print $1 }')"
 # this can fail because of the host FS
@@ -52,6 +126,3 @@ mke2fs -F -L "system" -U "$ROOTFS_UUID" -d "$ROOTFS_BUILD_DIR" \
 	-t ext4 \
 	"$dest_img" \
 	$(( apparent_size * 105 / 100 + ROOTFS_WIGGLEROOM_MB ))M 2>&1
-
-umount "$ROOTFS_BUILD_DIR"
-rm -rf "$ROOTFS_BUILD_DIR"
