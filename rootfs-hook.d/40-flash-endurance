@@ -9,7 +9,6 @@ Storage=volatile
 EOF
 
 cat >>/etc/fstab <<EOF
-tmpfs             /tmp           tmpfs   nosuid,nodev,noatime 0 0
 tmpfs       /var/lib/systemd/timesync tmpfs       defaults 0 0
 EOF
 
