@@ -1,7 +1,7 @@
 $(DEV_OR_IMG): $(ROOTFS_IMG) $(UBOOT_ITB) $(UBOOT_SPL) uboot-star64
 	ROOTFS_IMG=$(ROOTFS_IMG) \
 		UBOOT_ITB=$(UBOOT_ITB) UBOOT_SPL=$(UBOOT_SPL) \
-		./compile_image.star64 $@
+		./boards/$(ARCH)/$(DEVICE)/compile_image $@
 
 .PHONY: opensbi
 opensbi: $(OPENSBI_BIN)

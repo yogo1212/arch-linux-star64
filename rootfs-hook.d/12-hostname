@@ -1,3 +1,4 @@
 #!/bin/sh
 
-echo "${IMG_HOSTNAME-$TARGET_DEVICE}" > /etc/hostname
+# TODO might have to sanitise this
+echo "${IMG_HOSTNAME-$DEVICE}" > /etc/hostname
