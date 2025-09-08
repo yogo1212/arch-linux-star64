@@ -13,9 +13,11 @@ BASE_ROOTFS_TAR = $(DL_DIR)/base_rootfs_$(ARCH).tar.zst
 
 DEV_OR_IMG ?= $(BUILD_DIR)/$(TARGET).img
 
+# TODO optional
 LINUX_PKG = $(DL_DIR)/linux-$(ARCH).pkg.tar.zst
 
 PACMAN_CACHE_DIR = $(DL_DIR)/pacman_cache-$(ARCH)/
+PACMAN_CACHE_SUBDIRS = $(foreach dir,pkg sync,$(PACMAN_CACHE_DIR)/$(dir))
 
 REPO_DB = $(DL_DIR)/core_$(ARCH).db.tar.gz
 REPO_DB_URL = $(ARCH_LINUX_MIRROR)$(ARCH_LINUX_MIRROR_BASE)/core/core.db.tar.gz
@@ -71,10 +73,13 @@ $(LINUX_PKG): | $(DL_DIR)
 $(PACMAN_CACHE_DIR): | $(DL_DIR)
 	mkdir $@
 
+$(PACMAN_CACHE_SUBDIRS): | $(PACMAN_CACHE_DIR)
+	mkdir $@
+
 $(REPO_DB): | $(DL_DIR)
 	wget -O $@ $(REPO_DB_URL)
 
-$(ROOTFS_IMG): $(ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_DIR)
+$(ROOTFS_IMG): $(ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_SUBDIRS)
 	# TODO non-static ids, maybe detect and ask for sudo
 	BASE_ROOTFS_TAR=$(BASE_ROOTFS_TAR) LINUX_PKG=$(LINUX_PKG) \
 		PACMAN_CACHE_DIR=$(PACMAN_CACHE_DIR) \

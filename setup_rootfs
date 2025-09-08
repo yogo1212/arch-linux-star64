@@ -31,7 +31,8 @@ mount --rbind /proc/ "$ROOTFS_BUILD_DIR/proc"
 # /dev/shm, /dev/random, /dev/urandom and the likes are required for GPG and such
 mount --rbind /dev "$ROOTFS_BUILD_DIR/dev"
 mount --bind . "$ROOTFS_BUILD_DIR/mnt"
-mount --bind "$PACMAN_CACHE_DIR" "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
+mount --bind "$PACMAN_CACHE_DIR/pkg" "$ROOTFS_BUILD_DIR/var/cache/pacman/pkg"
+mount --bind "$PACMAN_CACHE_DIR/sync" "$ROOTFS_BUILD_DIR/var/lib/pacman/sync"
 mount --bind /etc/resolv.conf "$ROOTFS_BUILD_DIR/etc/resolv.conf"
 
 if [ -n "$EFI_MNT" ]; then
