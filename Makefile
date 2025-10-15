@@ -24,7 +24,7 @@ REPO_DB_URL = $(ARCH_LINUX_MIRROR)$(ARCH_LINUX_MIRROR_BASE)/core/core.db.tar.gz
 
 ROOTFS_IMG = $(BUILD_DIR)/rootfs-$(TARGET).img
 ROOTFS_BUILD_DIR = $(BUILD_DIR)/rootfs-$(TARGET)
-ROOTFS_UUID = $(BUILD_DIR)/rootfs-$(TARGET).uuid
+ROOTFS_UUID_FILE = $(BUILD_DIR)/rootfs-$(TARGET).uuid
 
 ROOTFS_WIGGLEROOM_MB ?= 256
 export ROOTFS_WIGGLEROOM_MB
@@ -34,7 +34,8 @@ UBOOT_GIT = https://github.com/u-boot/u-boot.git
 UBOOT_ITB = $(UBOOT_CLONE)/u-boot.itb
 UBOOT_SPL = $(UBOOT_CLONE)/spl/u-boot-spl.bin.normal.out
 
-ROOTFS_DEPS += $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID)
+# TODO LINUX_PKG is opt.
+ROOTFS_DEPS += $(BASE_ROOTFS_TAR) $(LINUX_PKG) $(ROOTFS_UUID_FILE)
 
 include ./boards/$(ARCH)/include.mk
 
@@ -83,7 +84,7 @@ $(ROOTFS_IMG): $(ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_SUBDIRS)
 	# TODO non-static ids, maybe detect and ask for sudo
 	BASE_ROOTFS_TAR=$(BASE_ROOTFS_TAR) LINUX_PKG=$(LINUX_PKG) \
 		PACMAN_CACHE_DIR=$(PACMAN_CACHE_DIR) \
-		ROOTFS_BUILD_DIR=$(ROOTFS_BUILD_DIR) ROOTFS_UUID=$(shell cat $(ROOTFS_UUID)) \
+		ROOTFS_BUILD_DIR=$(ROOTFS_BUILD_DIR) ROOTFS_UUID=$(shell cat $(ROOTFS_UUID_FILE)) \
 		ARCH=$(ARCH) \
 		EFI_MNT=$(EFI_MNT) EFI_UUID=$(shell cat $(EFI_UUID)) EFI_IMG=$(EFI_IMG) \
 		unshare -Umr \
@@ -91,7 +92,7 @@ $(ROOTFS_IMG): $(ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_SUBDIRS)
 			--map-groups=1:$$(sed -nE "s/^$$(id -gn)://p;q" /etc/subgid) \
 			./setup_rootfs "$@"
 
-$(ROOTFS_UUID): | $(BUILD_DIR)
+$(ROOTFS_UUID_FILE): | $(BUILD_DIR)
 	[ -f /proc/sys/kernel/random/uuid ] && cat /proc/sys/kernel/random/uuid > $@ || uuidgen > $@
 
 $(EFI_UUID): | $(BUILD_DIR)
