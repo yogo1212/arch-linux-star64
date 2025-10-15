@@ -1,0 +1,103 @@
+#!/bin/sh -e
+
+dev_or_file="$1"
+shift
+
+sudo_or_not() {
+	if [ -w "$dev_or_file" ]; then
+		"$@"
+	else
+		sudo "$@"
+	fi
+}
+
+pad_align_size_mb() {
+	local mb="$(( 1024 * 1024 ))"
+	local size="$1"
+	local size_mb="$(( (size + mb - 1) / mb ))"
+	local pad_mb="$2"
+	local align_mb="$3"
+
+	echo "$(( (size_mb + pad_mb + align_mb - 1) / align_mb * align_mb ))"
+}
+
+pad_align_file_size_mb() {
+	local size="$(stat -c '%s' "$1")"
+	shift
+
+	pad_align_size_mb "$size" "$@"
+}
+
+offset_mb=2 # enough space for gpt header
+efi_mb="$(pad_align_file_size_mb "$EFI_IMG" 0 512)"
+rootfs_mb="$(pad_align_file_size_mb "$ROOTFS_IMG" 0 2)"
+# TODO this isn't necessarily 1 MB
+secondary_gpt_mb=1
+
+img_size=$(( (offset_mb + efi_mb + rootfs_mb + secondary_gpt_mb) * 1024 * 1024 ))
+
+if [ -b "$dev_or_file" ]; then
+	if [ "$(sudo_or_not blockdev --getsize64 "$dev_or_file")" -lt "$img_size" ]; then
+		echo "$dev_or_file is too small (need at least $img_size bytes)" >&2
+		exit 1
+	fi
+else
+	truncate -s "$img_size" "$dev_or_file"
+fi
+
+# just to get rid of warnings about overwriting partition tables
+sudo_or_not dd "if=/dev/zero" "of=$dev_or_file" count=4 bs=4096 conv=notrunc
+
+EFI_PARTITION_TYPE_UUID=C12A7328-F81F-11D2-BA4B-00A0C93EC93B
+
+LINUX_FS_PARTITION_TYPE_UUID=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+
+# TODO -w always
+
+sudo_or_not sfdisk -X gpt "$dev_or_file" <<EOF
+name=efi,    start=${offset_mb}MiB, size=${efi_mb}MiB, type=$EFI_PARTITION_TYPE_UUID
+name=system,                                           type=$LINUX_FS_PARTITION_TYPE_UUID
+EOF
+
+sudo_or_not sfdisk --bytes -o "Device,Start,Size,Sectors,Name" -q -l "$dev_or_file" | tail -n +2 |\
+	while read part_dev part_start_sector part_size part_sectors name; do
+		# there's this silly game with disk interfaces where you really want to do sectors-only but you can't.
+
+		# divide part_size by part_sectors to get the sector size
+		part_offset="$(( part_size / part_sectors * part_start_sector ))"
+
+		case "$name" in
+		efi)
+			file="$EFI_IMG"
+			;;
+		system)
+			file="$ROOTFS_IMG"
+			;;
+		*)
+			[ -z "$name" ] || echo "ignoring unknown partition: $name" >&2
+			continue
+		esac
+
+		file_size="$(stat -c '%s' "$file")"
+		if [ ! "$file_size" -le "$part_size" ]; then
+			echo "$file doesn't fit $name ($file_size > $part_size)" >&2
+			exit 1
+		fi
+
+		if [ $(( part_offset % 4096 )) -ne 0 ] || [ $(( part_size % 4096 )) -ne 0 ]; then
+			echo "partition $name size ($part_size) or offset ($part_offset) not a multiple of 4096" >&2
+			exit 1
+		fi
+
+		sudo_or_not dd "if=$file" "of=$dev_or_file" seek=$(( part_offset / 4096 )) bs=4096 conv=notrunc
+
+		# use all available space for the root filsystem
+		# resizing a file first and then writing it can take forever
+		# do the resize afterwards 'live'
+		if [ -b "$dev_or_file" ] && [ "$name" = system ] && [ "$file_size" != "$part_size" ]; then
+			sync
+			sudo_or_not resize2fs "$part_dev"
+		fi
+	done
+
+[ ! -b "$dev_or_file" ] || sync

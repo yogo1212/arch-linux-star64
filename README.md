@@ -1,4 +1,4 @@
-Create an image of Arch Linux to write onto a SD flash card or eMMC flash chip for the Star64 SBC.
+Put Arch Linux onto non-X86 devices ([targets](#targets)).
 Try to do that using software that is typically available and keeping the product as close to upstream as possible.
 U-Boot is built for Starfive's VisionFive 2 board and the device tree is also for the VisionFive 2.
 The Star64 is not 100% compatible. The device tree could be updated and the kernel needs patching!
@@ -47,10 +47,16 @@ KEEP_SSH_KBD_PW
 PACMAN_UPDATE
 ```
 
+# targets
+
+These are the currently supported targets (`boards/$ARCH/$BOARD`)
+
+- `aarch64,generic_uefi`
+	- tested on Radxa ROCK5ITX+ with EDK2
+- `riscv64,star64`
+
+Use the `TARGET` variable to specify a target: `make TARGET=aarch64,generic_uefi`
+
 # other ideas
 
-- method to install tow-boot or EDK2 XSPI NOR
-  - makes this repo obsolete
-- boot using EFI
-
-I'm hesitant to publish a mode that creates an image for the SPI NOR flash. Details on how that is be done are in the table `Flash Boot Address Allocation` from the [JH7110 Boot User Guide](https://doc-en.rvspace.org/VisionFive2/Developer_Guide/JH7110_Boot_UG.pdf). The files can be created from here using `make uboot`.
+I'm hesitant to publish a mode that creates an image for the SPI NOR flash for the Star64. Details on how that is be done are in the table `Flash Boot Address Allocation` from the [JH7110 Boot User Guide](https://doc-en.rvspace.org/VisionFive2/Developer_Guide/JH7110_Boot_UG.pdf). The files can be created from here using `make uboot`.

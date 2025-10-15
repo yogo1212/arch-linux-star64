@@ -1,0 +1,131 @@
+#!/bin/sh -e
+
+# TODO
+# https://wiki.archlinux.org/title/Unified_kernel_image#Preparing_a_unified_kernel_image
+# systemd-boot can boot UKIs https://wiki.archlinux.org/title/Unified_kernel_image#systemd-boot
+# --> this would also work with netboot <--
+
+# at least at the moment, ALARM only ships one kernel at /boot/Image.
+# once that changes, we can look to kernel-install and the likes of.
+entry_dir="$(
+	[ -e /etc/os-release ] && . /etc/os-release || . /usr/lib/os-release
+	echo "$ID"
+)"
+
+if [ "$(stat -c %d:%i /)" = "$(stat -c %d:%i /proc/1/root/.)" ]; then
+	# 1 when running in a chroot, anything else otherwise
+	CHROOT=0
+else
+	CHROOT=1
+fi
+
+cd /
+
+chksum() {
+	sha256sum "$1" | awk '{ print $1 }'
+}
+
+find_cmdline() {
+	# check the same files as kernel-install - just don't trust /proc/cmdline in a chroot
+	local cmdline_files="/etc/kernel/cmdline /usr/lib/kernel/cmdline"
+
+	if [ $CHROOT -ne 1 ]; then
+		cmdline_files="$cmdline_files /proc/cmdline"
+	fi
+
+	for f in $cmdline_files; do
+		[ -e "$f" ] || continue
+
+		xargs -n 1 < "$f" | grep -vE '^initrd=' | xargs
+		return 0
+	done
+
+	if [ "$CHROOT" -ne 1 ]; then
+		rootfs_uuid="$(blkid -s UUID -o value "$(findmnt -n -o SOURCE /)")"
+	else
+		rootfs_uuid="$(cat /mnt/build/rootfs-aarch64,generic_uefi.uuid)"
+	fi
+
+	echo "nvme_load=YES nowatchdog rw root=UUID=$rootfs_uuid"
+}
+
+generate_config() {
+	local cmdline="$(find_cmdline)"
+
+	cat >/efi/loader/entries/alarm.conf <<EOF
+# Boot Loader Specification type#1 entry
+title      Arch Linux Arm
+sort-key   alarm
+options    $cmdline
+linux      /$entry_dir/linux
+initrd     /$entry_dir/initrd
+EOF
+
+	cat >/efi/loader/entries/alarm-fallback.conf <<EOF
+# Boot Loader Specification type#1 entry
+title      Arch Linux Arm - Fallback
+sort-key   alarm-fallback
+options    $cmdline
+linux      /$entry_dir/linux
+initrd     /$entry_dir/initrd-fallback
+EOF
+
+	#KERNEL="$(pacman -Qi linux-aarch64 | sed -nE 's/^Version\s*:\s*//p')"
+
+	#version    $KERNEL
+	#sort-key   alarm-$KERNEL
+	#machine-id f4cead838b5c406abf8a3a5a26ce0dc6
+	#options    .. systemd.machine_id=f4cead838b5c406abf8a3a5a26ce0dc6
+}
+
+setup() {
+	if [ "$CHROOT" -eq 1 ]; then
+		# SYSTEMD_RELAX_ESP_CHECKS is for bootctl to make it write to an /efi that is not a FAT partition
+		export SYSTEMD_RELAX_ESP_CHECKS=1
+	fi
+
+	bootctl install --no-variables --make-entry-directory=yes --entry-token=os-id
+
+	generate_config
+}
+
+sync_file() {
+	if [ -e "$2" ]; then
+		[ "$(chksum "$1")" != "$(chksum "$2")" ] || return 0
+	fi
+
+	cp "$1" "$2"
+}
+
+if [ ! -d "/efi/EFI" ]; then
+	echo "/efi/EFI not found - initializing EFI partition"
+	setup
+fi
+
+case "$1" in
+config)
+	generate_config
+	;;
+files)
+	while read -r line; do
+		case "$line" in
+		boot/Image)
+			sync_file "$line" "/efi/$entry_dir/linux"
+			;;
+		boot/initramfs-linux.img)
+			sync_file "$line" "/efi/$entry_dir/initrd"
+			;;
+		boot/initramfs-linux-fallback.img)
+			sync_file "$line" "/efi/$entry_dir/initrd-fallback"
+			;;
+		*)
+		esac
+	done
+	;;
+find_cmdline)
+	find_cmdline
+	;;
+*)
+	echo "unknown command: $1" >&2
+	exit 1
+esac

@@ -1,0 +1,21 @@
+#!/bin/sh -e
+
+# $1 kernel
+# $2 initramfs
+# $3 UKI (opt.)
+# KERNELVERSION KERNELDESTINATION
+
+# TODO if this can be made to work, might want to ditch the libalpm hook
+
+/usr/bin/alarm-efi-update files <<EOF
+boot/initramfs-linux.img
+boot/initramfs-linux-fallback.img
+EOF
+
+cat >/tmp/asdf <<EOF
+$1
+$2
+$3
+EOF
+
+env >>/tmp/asdf

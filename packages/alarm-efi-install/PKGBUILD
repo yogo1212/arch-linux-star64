@@ -1,0 +1,22 @@
+pkgname=alarm-efi-install
+pkgver=0.1
+pkgrel=1
+pkgdesc="Install/Update ALARM kernels to EFI partition"
+arch=('aarch64')
+url="TODO"
+license=('Unlicense')
+depends=()
+source=('mkinitcpio.hook' \
+        'alarm-efi-update' \
+        'libalpm.hook')
+sha256sums=('SKIP' \
+            'SKIP' \
+            'SKIP')
+
+package() {
+  mkdir -p "$pkgdir/usr/lib/initcpio/post/" "$pkgdir/usr/bin/" "$pkgdir/usr/share/libalpm/hooks/"
+
+	cp alarm-efi-update "$pkgdir/usr/bin/"
+	cp libalpm.hook "$pkgdir/usr/share/libalpm/hooks/install-alarm-kernel-to-efi-partition.hook"
+	cp mkinitcpio.hook "$pkgdir/usr/lib/initcpio/post/install-alarm-kernel-to-efi-partition.hook"
+}

@@ -1,0 +1,14 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = boot/Image
+# this hook should run after mkinitcpio so we can avoid extraneous writes
+Target = boot/initramfs-linux.img
+Target = boot/initramfs-linux-fallback.img
+
+[Action]
+Description = Copying ALARM kernel files to EFI partition...
+When = PostTransaction
+Exec = /usr/bin/alarm-efi-update files
+NeedsTargets

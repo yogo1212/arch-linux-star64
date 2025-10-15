@@ -9,3 +9,13 @@ cd "$EFI_MNT"
 cat >>/etc/fstab <<EOF
 UUID=$EFI_UUID    /efi           vfat    fmask=0137,dmask=0027 0 2
 EOF
+
+if [ -n "$ALARM_EFI_PKG" ]; then
+	# this does a trimmed-down version of what kernel-install does (depending on mkinitcpio instead of dracut)
+	pacman --noconfirm -U "/mnt/$ALARM_EFI_PKG"
+
+	/usr/bin/alarm-efi-update files <<EOF
+boot/Image
+EOF
+	# the mkinitcpio hook installs initramfs
+fi
