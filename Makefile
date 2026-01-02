@@ -43,6 +43,10 @@ ifneq (,$(wildcard ./boards/$(ARCH)/$(DEVICE)/include.mk))
 include ./boards/$(ARCH)/$(DEVICE)/include.mk
 endif
 
+ifneq (,$(wildcard ./boards/$(ARCH)/$(DEVICE)/vars.mk))
+include ./boards/$(ARCH)/$(DEVICE)/vars.mk
+endif
+
 ifdef USE_EFI
 EFI_MNT = /efi
 EFI_IMG = $(BUILD_DIR)/efi-$(TARGET).img
