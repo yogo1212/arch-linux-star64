@@ -84,13 +84,16 @@ $(PACMAN_CACHE_SUBDIRS): | $(PACMAN_CACHE_DIR)
 $(REPO_DB): | $(DL_DIR)
 	wget -O $@ $(REPO_DB_URL)
 
+.PHONY: rootfs
+rootfs: $(ROOTFS_IMG)
+
 $(ROOTFS_IMG): $(ROOTFS_DEPS) | $(BUILD_DIR) $(PACMAN_CACHE_SUBDIRS)
 	# TODO non-static ids, maybe detect and ask for sudo
 	BASE_ROOTFS_TAR=$(BASE_ROOTFS_TAR) LINUX_PKG=$(LINUX_PKG) \
 		PACMAN_CACHE_DIR=$(PACMAN_CACHE_DIR) \
 		ROOTFS_BUILD_DIR=$(ROOTFS_BUILD_DIR) ROOTFS_UUID=$(shell cat $(ROOTFS_UUID_FILE)) \
 		ARCH=$(ARCH) \
-		EFI_MNT=$(EFI_MNT) EFI_UUID=$(shell cat $(EFI_UUID)) EFI_IMG=$(EFI_IMG) \
+		$(if $(USE_EFI),EFI_MNT=$(EFI_MNT) EFI_UUID=$(shell cat $(EFI_UUID)) EFI_IMG=$(EFI_IMG)) \
 		unshare -Umr \
 			--map-users=1:$$(sed -nE "s/^$$(id -un)://p;q" /etc/subuid) \
 			--map-groups=1:$$(sed -nE "s/^$$(id -gn)://p;q" /etc/subgid) \
