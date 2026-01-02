@@ -26,6 +26,6 @@ target_device_clean:
 	[ ! -d $(OPENSBI_CLONE) ] || make -C $(OPENSBI_CLONE) clean
 
 .PHONY: uboot-star64
-uboot-star64: $(OPENSBI_BIN)
+uboot-star64: uboot $(OPENSBI_BIN)
 	make -C $(UBOOT_CLONE) \
 		OPENSBI=$(abspath $(OPENSBI_BIN))
