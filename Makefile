@@ -71,7 +71,7 @@ $(BUILD_DIR) $(DL_DIR):
 clean: target_device_clean
 	[ ! -d $(UBOOT_CLONE) ] || make -C $(UBOOT_CLONE) clean
 
-$(LINUX_PKG): | $(DL_DIR)
+$(LINUX_PKG): $(REPO_DB) | $(DL_DIR)
 	pkg_filename="$$(tar -xOf $(REPO_DB) "$$(tar -tf $(REPO_DB) | grep -E '^linux-[[:digit:]].*/desc')" | awk '/%FILENAME%/{getline; print}')" ; \
 		wget -O $(LINUX_PKG) "$(ARCH_LINUX_MIRROR)$(ARCH_LINUX_MIRROR_BASE)/core/$$pkg_filename"
 
